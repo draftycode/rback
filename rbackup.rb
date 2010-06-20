@@ -214,7 +214,7 @@ module RBack
     		args = @rsync_args || RBack::default[:rsync_args]
         # TODO Manage arguments and options
         dry_run = RBack::default[:dry_run]
-        dry_run = @opts[:dry_run] if @opts.key? :dry_run
+        dry_run = @opts[:dry_run] if $opt != nil and @opts.key? :dry_run
         args = '--dry-run ' + args if dry_run and not cmd.include? '--dry-run'
     		@src.excludes.each do |e|
     			args << " --exclude '" + e + "'"
@@ -342,12 +342,20 @@ module RBack
 
     cmd = sync.compile()
 
-    has_report = sync.opts.include?(:report) ? sync.opts[:report] : RBack::default[:report]
+
+    opts = sync.opts
+    has_report = RBack::default[:report]
+    has_report = opts[:report] if opts != nil and opts.include?(:report)
+
     result = {} if has_report
     result[:cmd] = cmd if has_report
 
     # Execute rsync command ?
-    execute = sync.opts.include?(:execute) ? sync.opts[:execute] : RBack::default[:execute]
+
+    execute = RBack::default[:execute]
+    execute = opts[:execute] if opts != nil and opts.include?(:execute)
+    # execute = sync.opts.include?(:execute) ? sync.opts[:execute] : RBack::default[:execute]
+
     if execute
       r = IO.popen(cmd.join(' ') + ' 2>&1').readlines.join
       result[:output] = r
