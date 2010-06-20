@@ -1,0 +1,12 @@
+
+h1. Description
+
+DSL to generate rsync commands.
+This an personal exercice used to learn about ruby lang.
+
+* Use with caution.
+* License : LGPL
+
+h2. Roadmap
+
+Waiting ...
