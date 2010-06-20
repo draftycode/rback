@@ -16,7 +16,7 @@ module RBack
     :rsync_args   => '-rltDz --update --stats',
     :stats        => true,    # TODO Unmanaged
     :progress     => false,   # Unmanaged
-    :report       => false,   # Generate a report ?
+    :report       => false,
     :delete       => false,   # Unmanaged
     :safe_links   => false,   # Unmanaged
     :use_ssh      => true,    # Unmanaged
