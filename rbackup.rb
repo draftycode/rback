@@ -7,6 +7,19 @@
 #           Also provide a way to execute, test, dry-run, parse result ...
 #
 
+
+# Need deep clone for some case here. Here is the most simple way
+# I found to do that. Those trick works as long as objects are serializable
+# and there isn't any singleton object. So, works here.
+# Is there a way to better deal with deep cloning in ruby ?
+class Object
+  def deep_clone
+    Marshal::load(Marshal.dump(self))
+  end
+end
+
+
+
 module RBack
 
 	# About default configuration.
@@ -145,7 +158,7 @@ module RBack
 		class Sync
 			attr_accessor :sym, :rsync_args, :src, :host, :to, :opts, :result
 			def initialize(sym)
-				@sym, @rsync_args, @src, @host, @to, @options = sym, nil, nil, nil, nil, { }
+				@sym, @rsync_args, @src, @host, @to, @options = sym, nil, nil, nil, nil, {}
 			end
 
 			def get_rsync_args;  @rsync_args;      end
@@ -172,16 +185,16 @@ module RBack
 			def rsync_args(ra)
 				@rsync_args = ra
 			end
-			def source(sym)        # Problem override access to Sync.source
+			def source(sym)        # Problem override access to Sync.source, renamed @src
 				conf = RBack::Conf::get
 				raise RuntimeError, 'Error, source does not exist !' if not conf.has_source(sym)
-				@src = conf.get_source(sym).clone
+				@src = conf.get_source(sym).deep_clone
 				@src.instance_eval(&block) if block_given?
 			end
 			def host(h)
 				conf = RBack::Conf::get
 				raise RuntimeError, 'Error, host does not exist !' if not conf.has_host(h)
-				@host = conf.get_host(h).clone
+				@host = conf.get_host(h).deep_clone
 			end
 			def to(to)
 				@to = to
@@ -194,7 +207,7 @@ module RBack
 			# Proxy forward methods to 'Source' object.
 			# Probably better to use method missing ...
 			# and forward all agrs, block, to 'source' with something
-			# of an array of method valid method to proxy.
+			# of an array of  valid methods to proxy.
 			# [:exclude_group, :exlude, :file]
 			# Have to see more in detail here ...
 			def exclude_group(*args, &block)
@@ -275,7 +288,7 @@ module RBack
 				opts = args[1]
 				if opts.include?(:inherit)
 					raise 'Inherited source does not exist !' if not conf.has_source(opts[:inherit])
-					_c = conf.get_source(opts[:inherit]).clone
+					_c = conf.get_source(opts[:inherit]).deep_clone
 					_c.sym = sym
 				end
 			end
@@ -335,7 +348,7 @@ module RBack
 			_c = RBack::Conf::get
 			# TODO Move check/raise in get_sync()
 			raise 'Sync configuration does not exist !' if not _c.has_sync(sym)
-			sync = _c.get_sync(sym).clone
+			sync = _c.get_sync(sym).deep_clone
 		else
 			sync = RBack::Conf::Sync.new(sym)
 		end
@@ -370,7 +383,7 @@ module RBack
 	def self.parse_result(raw_result)
 		sp = raw_result.split("\n")
 		sp.shift if sp.class == Array
-		files, stats, errors, messages, is_file = [ ], [ ], [ ], [ ], true
+		files, stats, errors, messages, is_file = [], [], [], [], true
 		sp.each do |line|
 			next if line == nil or line == ''
 			next if line =~ /^\s\s/ 
